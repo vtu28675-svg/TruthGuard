@@ -1,0 +1,663 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TruthGuard - AI Fake News Detection</title>
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #101828, #1d3557);
+            min-height: 100vh;
+            padding: 35px 15px;
+            color: #ffffff;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            margin: auto;
+            background: white;
+            color: #222;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Header */
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .header h1 {
+            color: #174ea6;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        /* Dashboard */
+
+        .dashboard {
+            margin-bottom: 35px;
+        }
+
+        .dashboard h2 {
+            color: #174ea6;
+            margin-bottom: 18px;
+            font-size: 23px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            padding: 22px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card p {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .total {
+            background: #eaf1ff;
+            color: #174ea6;
+        }
+
+        .fake-stat {
+            background: #ffe5e5;
+            color: #c62828;
+        }
+
+        .real-stat {
+            background: #e4f7e9;
+            color: #197a36;
+        }
+
+        .percentage {
+            background: #f2edff;
+            color: #7041b8;
+        }
+
+        /* News Input */
+
+        .input-section {
+            margin-top: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 17px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 190px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 15px;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #174ea6;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: #174ea6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #103b80;
+        }
+
+        /* Prediction Result */
+
+        .result {
+            margin-top: 25px;
+            padding: 22px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .fake {
+            background: #ffe5e5;
+            border: 2px solid #e53935;
+            color: #c62828;
+        }
+
+        .real {
+            background: #e4f7e9;
+            border: 2px solid #2e9d50;
+            color: #197a36;
+        }
+
+        .result h2 {
+            font-size: 27px;
+            margin-bottom: 12px;
+        }
+
+        .confidence {
+            margin-top: 18px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .progress-bg {
+            width: 100%;
+            height: 14px;
+            background: #ddd;
+            border-radius: 20px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #174ea6;
+            border-radius: 20px;
+        }
+
+        /* Error */
+
+        .error {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ffe5e5;
+            color: #c62828;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* Chart */
+
+        .chart-section {
+            margin-top: 40px;
+        }
+
+        .chart-section h2 {
+            color: #174ea6;
+            margin-bottom: 18px;
+            font-size: 23px;
+        }
+
+        .chart-container {
+            max-width: 450px;
+            height: 350px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f8faff;
+            border-radius: 12px;
+        }
+
+        /* History */
+
+        .history-section {
+            margin-top: 35px;
+        }
+
+        .history-section h2 {
+            color: #174ea6;
+            margin-bottom: 18px;
+            font-size: 23px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+        }
+
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #174ea6;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f2f6fc;
+        }
+
+        .fake-label {
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .real-label {
+            color: #197a36;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+        }
+
+        /* Disclaimer */
+
+        .disclaimer {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f2f4f7;
+            color: #666;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* Footer */
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        /* Mobile Responsive */
+
+        @media (max-width: 550px) {
+
+            .container {
+                padding: 22px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 29px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+
+    <div class="header">
+
+        <h1>🛡️ TruthGuard</h1>
+
+        <p>AI-Based Fake News Detection System</p>
+
+    </div>
+
+
+    <!-- Dashboard Statistics -->
+
+    <div class="dashboard">
+
+        <h2>📊 Dashboard Overview</h2>
+
+        <div class="stats-grid">
+
+            <div class="stat-card total">
+
+                <h3>{{ total_news }}</h3>
+
+                <p>Total News Analyzed</p>
+
+            </div>
+
+
+            <div class="stat-card fake-stat">
+
+                <h3>{{ fake_count }}</h3>
+
+                <p>Fake News Detected</p>
+
+            </div>
+
+
+            <div class="stat-card real-stat">
+
+                <h3>{{ real_count }}</h3>
+
+                <p>Real News Detected</p>
+
+            </div>
+
+
+            <div class="stat-card percentage">
+
+                <h3>{{ fake_percentage }}%</h3>
+
+                <p>Fake News Percentage</p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- News Input Form -->
+
+    <div class="input-section">
+
+        <form method="POST">
+
+            <label for="news">Enter News Article</label>
+
+            <textarea
+                id="news"
+                name="news"
+                placeholder="Paste your news article here..."
+                required>{{ news_text }}</textarea>
+
+            <button type="submit">
+
+                Analyze News
+
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- Error Message -->
+
+    {% if error %}
+
+        <div class="error">
+
+            {{ error }}
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- Prediction Result -->
+
+    {% if prediction %}
+
+        <div class="result {% if prediction == 'Fake News' %}fake{% else %}real{% endif %}">
+
+            <h2>{{ prediction }}</h2>
+
+            <p>Analysis completed successfully!</p>
+
+            <div class="confidence">
+
+                Model Confidence: {{ confidence }}%
+
+                <div class="progress-bg">
+
+                    <div
+                        class="progress-bar"
+                        style="width: {{ confidence }}%;">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- News Distribution Chart -->
+
+    <div class="chart-section">
+
+        <h2>📈 News Distribution Analysis</h2>
+
+        <div class="chart-container">
+
+            <canvas id="newsChart"></canvas>
+
+        </div>
+
+    </div>
+
+
+    <!-- Prediction History -->
+
+    <div class="history-section">
+
+        <h2>📋 Recent Prediction History</h2>
+
+        {% if history %}
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Date & Time</th>
+
+                            <th>Prediction</th>
+
+                            <th>Confidence</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for item in history %}
+
+                            <tr>
+
+                                <td>{{ item["Date and Time"] }}</td>
+
+                                <td>
+
+                                    {% if item["Prediction"] == "Fake News" %}
+
+                                        <span class="fake-label">
+
+                                            {{ item["Prediction"] }}
+
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="real-label">
+
+                                            {{ item["Prediction"] }}
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+
+                                    {{ item["Confidence"] }}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <p class="empty">
+
+                No prediction history available yet.
+
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- Disclaimer -->
+
+    <div class="disclaimer">
+
+        <strong>Disclaimer:</strong>
+
+        TruthGuard uses a Machine Learning model to classify news
+        based on patterns learned from its training dataset.
+        The confidence score is the model's estimated confidence,
+        not proof that the news is true or false.
+        Always verify important information using reliable sources.
+
+    </div>
+
+
+    <!-- Footer -->
+
+    <div class="footer">
+
+        TruthGuard | AI-Based Fake News Detection
+
+    </div>
+
+</div>
+
+
+<!-- Chart.js Pie Chart -->
+
+<script>
+
+    const fakeCount = Number({{ fake_count | tojson }});
+
+    const realCount = Number({{ real_count | tojson }});
+
+    const chartCanvas = document.getElementById("newsChart");
+
+    new Chart(chartCanvas, {
+
+        type: "pie",
+
+        data: {
+
+            labels: ["Fake News", "Real News"],
+
+            datasets: [{
+
+                data: [fakeCount, realCount],
+
+                backgroundColor: [
+                    "#e53935",
+                    "#2e9d50"
+                ],
+
+                borderWidth: 2,
+
+                borderColor: "#ffffff"
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+
+                    position: "bottom"
+
+                },
+
+                title: {
+
+                    display: true,
+
+                    text: "Fake vs Real News Distribution"
+
+                }
+
+            }
+
+        }
+
+    });
+
+</script>
+
+</body>
+
+</html>

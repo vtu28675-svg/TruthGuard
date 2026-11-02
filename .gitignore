@@ -1,0 +1,13 @@
+
+venv/
+__pycache__/
+*.pyc
+.env
+history.csv
+
+# Dataset files are not uploaded
+dataset/raw/
+dataset/processed/
+
+# Temporary files
+.DS_Store
